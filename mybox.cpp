@@ -1,4 +1,3 @@
-
 #include "mybox.h"
 #include <QKeyEvent>
 #include <QTimer>
@@ -80,10 +79,10 @@ void BoxGroup::keyPressEvent(QKeyEvent *event)
         }
         break;
     case Qt::Key_Up:
-        rotate(90);
+        //rotate(90);
         if(isColliding())
         {
-            rotate(-90);
+            //rotate(-90);
         }
         break;
         //空格键实现坠落
@@ -122,8 +121,10 @@ void BoxGroup::clearBoxGroup(bool destroyBox)
     QList<QGraphicsItem *>itemList=childItems();
     QGraphicsItem * item;
     foreach (item, itemList)
-    {
-        removeFromGroup(item);//将小方块从方块组中移动到场景中
+    { 
+        removeFromGroup(item);//将小方块从方块组中移动到场景中,该函数
+                              //有一个参数，若参数为真，则不但要从方块组中移除小方块，
+                              //还要将这些小方块销毁掉
         if(destroyBox)
         {
             OneBox *box=(OneBox *)item;
@@ -131,3 +132,117 @@ void BoxGroup::clearBoxGroup(bool destroyBox)
         }
     }
 }
+
+//创建方块
+void BoxGroup::createBox(const QPointF &point, BoxShape shape)
+{
+    static const QColor colorTable[7]={
+                                        QColor(200,0,0,100),
+                                        QColor(255,200,0,100),
+                                        QColor(0,0,200,100),
+                                        QColor(0,200,0,100),
+                                        QColor(0,200,255,100),
+                                        QColor(200,0,255,100),
+                                        QColor(150,100,100,100)
+                                      };
+    int shapeID=shape;
+    if(shape==RandomShape)
+    {
+        shapeID=qrand()%7;//产生0-6之间的随机数
+    }
+    QColor color=colorTable[shapeID];
+    QList<OneBox*>list;
+    //恢复方块的变换矩阵
+    setTransform(oldTransform);
+    for(int i=0;i<4;++i)
+    {
+        OneBox *temp=new OneBox(color);
+        list<<temp;
+        addToGroup(temp);
+    }
+    switch (shapeID) {
+    case IShape:
+        currentShape=IShape;
+        list.at(0)->setPos(-30,-10);
+        list.at(1)->setPos(-10,-10);
+        list.at(2)->setPos(10,-10);
+        list.at(3)->setPos(30,-10);
+        break;
+    case JShape:
+        currentShape=JShape;
+        list.at(0)->setPos(10,-10);
+        list.at(1)->setPos(10,10);
+        list.at(2)->setPos(-10,30);
+        list.at(3)->setPos(10,30);
+        break;
+    case LShape:
+        currentShape=LShape;
+        list.at(0)->setPos(-30,-10);
+        list.at(1)->setPos(-10,-10);
+        list.at(2)->setPos(10,-10);
+        list.at(3)->setPos(30,-10);
+        break;
+    case OShape:
+        currentShape=OShape;
+        list.at(0)->setPos(-10,-10);
+        list.at(1)->setPos(10,-10);
+        list.at(2)->setPos(-10,10);
+        list.at(3)->setPos(10,10);
+        break;
+    case SShape:
+        currentShape=SShape;
+        list.at(0)->setPos(10,-10);
+        list.at(1)->setPos(30,-10);
+        list.at(2)->setPos(-10,10);
+        list.at(3)->setPos(10,10);
+        break;
+    case TShape:
+        currentShape=TShape;
+        list.at(0)->setPos(-10,-10);
+        list.at(1)->setPos(10,-10);
+        list.at(2)->setPos(30,-10);
+        list.at(3)->setPos(10,10);
+        break;
+    case ZShape:
+        currentShape=ZShape;
+        list.at(0)->setPos(-10,-10);
+        list.at(1)->setPos(10,-10);
+        list.at(2)->setPos(10,10);
+        list.at(3)->setPos(30,10);
+        break;
+    default:
+        break;
+    }
+    //设置位置
+    setPos(point);
+    //如果开始就发生碰撞，则游戏已结束
+    if(isColliding())
+    {
+        stopTimer();
+        emit gameFinished();
+    }
+}
+
+//开启定时器
+void BoxGroup::startTimer(int interval)
+{
+    timer->start(interval);
+}
+//向下移动一步
+void BoxGroup::moveOneStep()
+{
+    moveBy(0,20);
+    if(isColliding())
+    {
+        moveBy(0,-20);
+        clearBoxGroup();
+        emit needNewBox();
+    }
+}
+
+//停止定时器
+void BoxGroup::stopTimer()
+{
+    timer->stop();
+}
+

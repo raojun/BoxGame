@@ -2,9 +2,12 @@ RESOURCES += \
     myImages.qrc
 
 HEADERS += \
-    mybox.h
+    mybox.h \
+    myview.h
 
 QT+=widgets
 
 SOURCES += \
-    mybox.cpp
+    mybox.cpp \
+    main.cpp \
+    myview.cpp
